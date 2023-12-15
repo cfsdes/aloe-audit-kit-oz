@@ -1,10 +1,37 @@
-[TOC]
+# Table of Contents
+- [Aloe Capital](#1)
+   - [Introduction](#1.1)
+   - [How it Works](#1.2)
+   - [Contracts](#1.3)
+   - [References](#1.4)
+   - [Previous Audits](#1.5)
+- [Audit Kit](#2)
+   - [Audit Scope](#2.1)
+   - [Initial Set-Up](#2.2)
+     - [Virtual Environment](#2.2.1)
+     - [Install Dependencies & Build](#2.2.2)
+   - [Foundry Tests](#2.3)
+     - [Environment Variables](#2.3.1)
+     - [Running Tests (manually)](#2.3.1)
+     - [Running Tests (script)](#2.3.1)
+   - [Coverage Results](#2.4)
+     - [/src](#2.4.1)
+     - [/libraries](#2.4.2)
+- [Static Analyzers](#3)
+   - [Main False Positives Excluded](#3.1)
+     - [slither: call-loops](#3.1.1)
+     - [slither: dead-code](#3.1.2)
+     - [slither: arbitrary-send-eth](#3.1.3)
+     - [slither: low-level-calls](#3.1.4)
+     - [slither: incorrect-shift](#3.1.5)
+     - [slither: reentrancy](#3.1.6)
+     - [slither: missing-zero-check](#3.1.7)
+   - [Valid Findings](#3.2)
 
 
+# [Aloe Capital](https://github.com/sherlock-audit/2023-10-aloe)  <a name="1">
 
-# [Aloe Capital](https://github.com/sherlock-audit/2023-10-aloe)
-
-## Introduction
+## Introduction <a name="1.1">
 
 Aloe II is a money market that lets users earn yield, use Uniswap positions as collateral, or create new ones on margin. 
 
@@ -14,7 +41,7 @@ Aloe II can be used in two different ways:
 - **Borrow side (Prime):** On the other hand, users with more experience (named "**Marked Makers**") can deploy capital from lending markets into their chosen trading pair, executing LP strategies for profit. 
   - Market makers interact with Aloe Prime through margin accounts, which are special, user-owned contracts that have permission to borrow from the lending markets. These accounts present an interface to their owner, allowing them to control borrow amounts and Uniswap V3 position creation. When positions are closed, earned fees are collected in margin balances, which can ultimately be withdrawn by the market makers.
 
-## How it works
+## How it works <a name="1.2">
 
 1. "Passive Investors" deposit tokens to create isolated lending market on Uniswap V3 pairs
 
@@ -50,7 +77,7 @@ Below is a summary of the Market Maker workflow:
 
 
 
-## Contracts
+## Contracts <a name="1.3">
 
 ```
 Borrower -- "Allows its owner to create and manage leveraged Uniswap positions"
@@ -80,7 +107,7 @@ libraries
 
 
 
-## References
+## References <a name="1.4">
 
 - [Repository](https://github.com/sherlock-audit/2023-10-aloe)
 - [Documentation](https://docs.aloe.capital/)
@@ -89,7 +116,7 @@ libraries
 
 
 
-## Previous Audits
+## Previous Audits <a name="1.5">
 
 - [BlockSec](https://drive.google.com/file/d/1aWEkCTTcuEnupf6nbIsqWy38igsj9-Hx/view)
 - [Sherlock](https://github.com/sherlock-audit/2023-10-aloe-judging)
@@ -97,23 +124,23 @@ libraries
 
 
 
-# Audit Kit
+# Audit Kit <a name="2">
 
 | Language | .sol Files | Lines of Code | SDK     |
 | -------- | ---------- | ------------- | ------- |
 | Solidity | 18         | 2079          | Foundry |
 
-## Audit Scope
+## Audit Scope <a name="2.1">
 
 All contracts inside: `aloe-ii/core`
 
 
 
-## Initial Set-Up
+## Initial Set-Up <a name="2.2">
 
 > Since the main project being audited is located at `aloe-ii/core`, all setup will be performed inside this directory.
 
-### Virtual Environment
+### Virtual Environment <a name="2.2.1">
 
 There are some contracts that utilize python scripts with the `ffi` foundry cheatcode. Therefore, to avoid any potential errors during compilation, it's recommended to build and run all tests in a virtual python environment. To configure it:
 
@@ -127,7 +154,7 @@ pip install slither-analyzer
 
 
 
-### Install Dependencies & Build
+### Install Dependencies & Build <a name="2.2.2">
 
 To install all required dependencies and build the contracts:
 
@@ -140,9 +167,9 @@ forge build
 
 
 
-## Foundry Tests
+## Foundry Tests <a name="2.3">
 
-### Environment Variables
+### Environment Variables <a name="2.3.1">
 
 The project uses RPC URLs to make forks from Ethereum and Optimism mainnet. It gets the RPC URLs from the environment variables to perform the tests. 
 
@@ -157,7 +184,7 @@ export RPC_URL_OPTIMISM=https://optimism-mainnet.infura.io/v3/<API_KEY>
 
 
 
-### Running Tests (manually)
+### Running Tests (manually) <a name="2.3.2">
 
 As mentioned before, there are some tests that use the `ffi` cheatcode. Hence, to execute the tests without any error, it's required to provide the `--ffi` argument.
 
@@ -173,7 +200,7 @@ forge test --ffi
 
 
 
-### Running Tests (script)
+### Running Tests (script) <a name="2.3.3">
 
 **Aloe** project has a ready-to-use `test.sh` script. The script is located at `aloe-ii/core/test.sh` and it runs the unit tests + code coverage automatically. To use it:
 
@@ -195,23 +222,23 @@ It's highly recommended to use the script to generate the coverage report, becau
 
 
 
-## Coverage Results
+## Coverage Results <a name="2.4">
 
-### /src
+### /src <a name="2.4.1">
 
 ![4-coverage_src](assets/4-coverage_src.png)
 
-### /libraries
+### /libraries <a name="2.4.2">
 
 ![5-coverage_libs](assets/5-coverage_libs.png)
 
 
 
-# Static Analyzer Results
+# Static Analyzer Results <a name="3">
 
-## Main False Positives Excluded
+## Main False Positives Excluded <a name="3.1">
 
-### slither: call-loops
+### slither: call-loops <a name="3.1.1">
 
 | Issue                                                        | Reason                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -219,7 +246,7 @@ It's highly recommended to use the script to generate the coverage report, becau
 
 
 
-### slither: dead-code
+### slither: dead-code <a name="3.1.2">
 
 | Issue                                                        | Reason                                    |
 | ------------------------------------------------------------ | ----------------------------------------- |
@@ -229,7 +256,7 @@ It's highly recommended to use the script to generate the coverage report, becau
 
 
 
-### slither: arbitrary-send-eth
+### slither: arbitrary-send-eth <a name="3.1.3">
 
 | Issue                                                        | Reason                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -237,7 +264,7 @@ It's highly recommended to use the script to generate the coverage report, becau
 
 
 
-### slither: low-level-calls
+### slither: low-level-calls <a name="3.1.4">
 
 | Issue                                                        | Reason                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -245,7 +272,7 @@ It's highly recommended to use the script to generate the coverage report, becau
 
 
 
-### slither: incorrect-shift
+### slither: incorrect-shift <a name="3.1.5">
 
 | Issue                                                        | Reason                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -253,14 +280,14 @@ It's highly recommended to use the script to generate the coverage report, becau
 
 
 
-### slither: reentrancy
+### slither: reentrancy <a name="3.1.6">
 
 | Issue                                                        | Reason                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | Reentrancy in Lender.flash(uint256,IFlashBorrower,bytes):<br/>External calls:<br/>- to.onFlashLoan(msg.sender,amount,data)<br/>State variables written after the call(s):<br/>- lastAccrualTime = lastAccrualTime_<br/>Ledger.lastAccrualTime can be used in cross function reentrancies:<br/>- Ledger._getCache()<br/>- Lender._load()<br/>- Lender._save(Ledger.Cache,bool)<br/>- Lender.flash(uint256,IFlashBorrower,bytes)<br/>- Lender.initialize()<br/>- Ledger.lastAccrualTime | The function uses the lastAccrualTime variable to protect against reentrancy attacks. Lines: 297-299. |
 | Reentrancy in Borrower.modify(IManager,bytes,uint40):        | It doesn't perform any sensitive operation before the externall call. Also, the modify function is restricted to owner only. |
 
-### slither: missing-zero-check
+### slither: missing-zero-check <a name="3.1.7">
 
 | Issue                                                        | Reason                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -268,7 +295,7 @@ It's highly recommended to use the script to generate the coverage report, becau
 
 
 
-## Valid Findings
+## Valid Findings <a name="3.2">
 
 ### slither: dead-code
 
