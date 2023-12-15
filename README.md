@@ -26,7 +26,7 @@
      - [slither: incorrect-shift](#3.1.5)
      - [slither: reentrancy](#3.1.6)
      - [slither: missing-zero-check](#3.1.7)
-   - [Valid Findings](#3.2)
+   - [Findings](#3.2)
 
 
 # [Aloe Capital](https://github.com/sherlock-audit/2023-10-aloe)  <a name="1">
@@ -295,50 +295,6 @@ It's highly recommended to use the script to generate the coverage report, becau
 
 
 
-## Valid Findings <a name="3.2">
+## Findings <a name="3.2">
 
-### slither: dead-code
-
-#### Summary
-
-There are some occurrences of unused (`dead`) code in some contracts.
-
-#### Vulnerability Details
-
-Avoiding to have unused code in the contracts is a good practice since it helps to keep the code clean and readable.
-
-In `Log2.sol`, the `log2Up(uint256 x, uint8 iters)` function exists but it is not being used in the contracts nor for tests, so it could be removed.
-
-#### Proof of Concept
-
-Affected lines:
-
-- https://github.com/sherlock-audit/2023-10-aloe/blob/main/aloe-ii/core/src/libraries/Log2.sol#L225-L230
-
-#### Recommended Mitigation Steps
-
-Remove the unused code.
-
-
-
-### slither: missing-zero-check
-
-#### Vulnerability Details
-
-Some parameters of functions are not checked for invalid values:
-
-- `Factory.constructor`: The addresses of `governor` and `reserve` should be checked for non-zero values
-
-#### Proof of Concept
-
-Affected lines:
-
-- https://github.com/sherlock-audit/2023-10-aloe/blob/main/aloe-ii/core/src/Factory.sol#L146C3-L148
-
-#### Impact
-
-A wrong user input or wallets defaulting to the zero addresses for a  missing input can lead to the contract needing to redeploy or wasted gas.
-
-#### Recommended Mitigation Steps
-
-Check that the address is not zero.
+https://github.com/cfsdes/aloe-audit-kit-oz/issues
