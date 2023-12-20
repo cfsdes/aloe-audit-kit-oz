@@ -17,7 +17,9 @@
    - [Coverage Results](#2.4)
      - [/src](#2.4.1)
      - [/libraries](#2.4.2)
+     - [Main Functions without Coverage](#2.4.3)
 - [Static Analyzers](#3)
+   - [Findings](#3.2)
    - [Main False Positives Excluded](#3.1)
      - [slither: call-loops](#3.1.1)
      - [slither: dead-code](#3.1.2)
@@ -26,20 +28,20 @@
      - [slither: incorrect-shift](#3.1.5)
      - [slither: reentrancy](#3.1.6)
      - [slither: missing-zero-check](#3.1.7)
-   - [Findings](#3.2)
+- [Needs Attention](#4)
 
 
 # [Aloe Capital](https://github.com/sherlock-audit/2023-10-aloe)  <a name="1">
 
 ## Introduction <a name="1.1">
 
-Aloe II is a money market that lets users earn yield, use Uniswap positions as collateral, or create new ones on margin. 
+Aloe II is a money market that allows users to earn yield on their lending or create Uniswap positions using capital from the lending markets.
 
 Aloe II can be used in two different ways:
 
-- **Lending Side (Earn):** It allows users to provide assets to the lending markets in Aloe Prime to earn yields on their assets. These types of investors are called "Passive Investors".
-- **Borrow side (Prime):** On the other hand, users with more experience (named "**Marked Makers**") can deploy capital from lending markets into their chosen trading pair, executing LP strategies for profit. 
-  - Market makers interact with Aloe Prime through margin accounts, which are special, user-owned contracts that have permission to borrow from the lending markets. These accounts present an interface to their owner, allowing them to control borrow amounts and Uniswap V3 position creation. When positions are closed, earned fees are collected in margin balances, which can ultimately be withdrawn by the market makers.
+- **Lending Side (Earn):** It allows users to provide assets to the lending markets to earn yields on their assets. These types of investors are called "Passive Investors".
+- **Borrow side (Prime):** On the other hand, users with more experience (named "**Marked Makers**") can use capital from the lending markets to create [Uniswap](https://docs.uniswap.org/concepts/uniswap-protocol) positions.
+  - The borrowing needs to be performed using [margin accounts](https://docs.aloe.capital/aloe-ii/overview#components), which are user-owned contracts that have permission to borrow from the lending markets. These accounts have an interface to control the borrowed amount and create the Uniswap positions.
 
 ## How it works <a name="1.2">
 
@@ -232,6 +234,25 @@ It's highly recommended to use the script to generate the coverage report, becau
 
 ![5-coverage_libs](assets/5-coverage_libs.png)
 
+### Main Functions without Coverage <a name="2.4.3">
+
+#### Lender:flash()
+
+The `flash()` function in the contract `Lender`, which is responsible for requesting flash loans, doesn't have coverage. Also, the function is not documented in the [Aloe Contracts Documentation](https://aloelabs.github.io/aloe-ii/index.html). Therefore, it's an important point to pay attention to.
+
+<img width="1492" alt="Captura de Tela 2023-12-20 às 08 08 54" src="https://github.com/cfsdes/aloe-audit-kit-oz/assets/20214824/927a92c8-b212-44af-8411-5074703a4b50">
+
+#### Borrower:rescue()
+
+A function used to perform arbitrary ERC20 transfers. It does external calls and only works within the `modify` callback.
+
+<img width="1492" alt="Captura de Tela 2023-12-20 às 08 18 22" src="https://github.com/cfsdes/aloe-audit-kit-oz/assets/20214824/1d13f9f9-a31f-46f1-b732-5f15b4f73546">
+
+#### VolatilityOracle:update() & _getFeeGrowthGlobalsOld()
+
+Functions used to estimate and update implied volatility for a Uniswap V3 pair.
+
+<img width="1492" alt="Captura de Tela 2023-12-20 às 08 24 46" src="https://github.com/cfsdes/aloe-audit-kit-oz/assets/20214824/5a0790fd-9ad6-4fcd-8ce2-e3d7eb7d5a94">
 
 
 # Static Analyzer Results <a name="3">
@@ -298,3 +319,12 @@ It's highly recommended to use the script to generate the coverage report, becau
 ## Findings <a name="3.2">
 
 https://github.com/cfsdes/aloe-audit-kit-oz/issues
+
+# Needs Attention [Important Test Cases] <a name="4">
+
+## Lender:flash()
+
+As mentioned in the [Coverage Results](#2.4.3) section, the `flash()` function allows a user to request a flash loan from the `Lender` contract. The `flash()` function is protected against reentrancy. However, the contract also has a function called `repay()` that can be used to reduce the debt of a borrower, and this function works with pre-payments.
+
+Therefore, it is highly recommended to do a deeper analysis of this flow to verify if an attacker could potentially manipulate the `cache.lastBalance` check and do a pre-payment using the tokens received from the flash loan. If it's possible, an attacker could potentially reduce borrowers' debt without the need to do a real transfer to the contract.
+
