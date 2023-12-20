@@ -29,6 +29,8 @@
      - [slither: reentrancy](#3.1.6)
      - [slither: missing-zero-check](#3.1.7)
 - [Needs Attention](#4)
+     - [Lender:flash()](#4.1)
+     - [Lender:_transfer()](#4.2)
 
 
 # [Aloe Capital](https://github.com/sherlock-audit/2023-10-aloe)  <a name="1">
@@ -322,9 +324,31 @@ https://github.com/cfsdes/aloe-audit-kit-oz/issues
 
 # Needs Attention [Important Test Cases] <a name="4">
 
-## Lender:flash()
+## Lender:flash() <a name="4.1">
 
 As mentioned in the [Coverage Results](#2.4.3) section, the `flash()` function allows a user to request a flash loan from the `Lender` contract. The `flash()` function is protected against reentrancy. However, the contract also has a function called `repay()` that can be used to reduce the debt of a borrower, and this function works with pre-payments.
 
 Therefore, it is highly recommended to do a deeper analysis of this flow to verify if an attacker could potentially manipulate the `cache.lastBalance` check and do a pre-payment using the tokens received from the flash loan. If it's possible, an attacker could potentially reduce borrowers' debt without the need to do a real transfer to the contract.
+
+Below is an example of a flow for this test case:
+1. `Factory` contract calls `Lender.whitelist(address borrower)` to whitelist a borrower account
+2. A borrower account calls `Lender.borrow()`.
+      - The borrower account will receive an amount of assets and increase its debt by `units`
+3. Attacker calls `Lender.flash()` to request flash loan
+      - The `Lender.flash()` function will do an external call to the `onFlashLoan()` function of attacker's malicious contract.
+      - Next, `Attacker.onFlashLoan()` calls `Lender.repay()` using the flash loan amount received to repay and reduce `units` of borrower from step2 for free.
+
+If this test succeeds, it will be possible to reduce borrower units for free.
+
+![chain](https://github.com/cfsdes/aloe-audit-kit-oz/assets/20214824/70886a79-79d3-42a1-bc5b-759b1820274f)
+
+
+## Lender:_transfer() <a name="4.2">
+
+The `Lender._transfer()` function sets the balance of assets for both `from` and `to` addresses. However, all operations performed in the function are `uncheck{}`. Double-check if it can lead to overflow.
+
+<img width="1120" alt="Captura de Tela 2023-12-20 às 12 46 51" src="https://github.com/cfsdes/aloe-audit-kit-oz/assets/20214824/574529a2-92ef-488d-9c74-7dd4d17ad13a">
+
+
+
 
