@@ -30,6 +30,7 @@
      - [slither: missing-zero-check](#3.1.7)
 - [Needs Attention](#4)
      - [Lender:flash()](#4.1)
+        - [UPDATE: 21/12/2023 -> FALSE POSITIVE](#4.1.1)
      - [Lender:_transfer()](#4.2)
 
 
@@ -342,6 +343,20 @@ If this test succeeds, it will be possible to reduce borrower units for free.
 
 ![chain](https://github.com/cfsdes/aloe-audit-kit-oz/assets/20214824/70886a79-79d3-42a1-bc5b-759b1820274f)
 
+### UPDATE: 21/12/2023 -> FALSE POSITIVE <a name="4.1.1">
+
+The potential issue mentioned above is a false positive. It is not possible to use flash loans to call `deposit()` or `repay()`. The `flash()` function sets `lastAccrualTime = 0` to protect against reentrancy. 
+
+![Captura de Tela 2023-12-21 às 09 09 45](https://github.com/cfsdes/aloe-audit-kit-oz/assets/20214824/327fe8d5-9b41-4f17-ac66-87054548054b)
+
+Also, the `_load()` function used to load the cache, calls the `_previewInterest()` function, which reverts if `lastAccrualTime != 0`:
+
+<img width="1055" alt="Captura de Tela 2023-12-21 às 09 10 52" src="https://github.com/cfsdes/aloe-audit-kit-oz/assets/20214824/6ab7f609-23cf-46ab-bf65-173b2fcdc523">
+<img width="1055" alt="Captura de Tela 2023-12-21 às 09 11 37" src="https://github.com/cfsdes/aloe-audit-kit-oz/assets/20214824/a42491b7-3ca7-49fa-927f-8cd97e9eb285">
+
+Since both `repay()` and `deposit()` function calls `_load()`, it is not possible to call them in the same transaction of a flash loan call.
+
+A test script was added to the `tests/` directory to validate the false positive.
 
 ## Lender:_transfer() <a name="4.2">
 
